@@ -18,7 +18,7 @@ args = parser.parse_args()
 all = []
 TOP_POS = {}
 
-with open('data/dk-salaries-week-1.csv', 'rb') as dk:
+with open('data/dk-salaries-current-week.csv', 'rb') as dk:
     rd = csv.reader(dk, delimiter=',')
     for idx, player in enumerate(rd):
         # skip header

@@ -1,4 +1,5 @@
 from sys import argv
+import re
 import csv
 import requests
 from bs4 import BeautifulSoup as BS
@@ -17,11 +18,14 @@ def scrape():
     hold = []
     hold.append(['playername', 'points'])
     for page in build_fp_pages():
-        r = requests.get(page)
-        soup = BS(r.text)
-        for row in soup.find_all('tr'):
-            try:
-                hold.append([str(row.find_all('td')[0].text),
+	r = requests.get(page)
+        soup = BS(r.text,"html5lib")
+        for row in soup.find_all('tr',{'class': re.compile('mpb-available')}):
+            #print(row)    
+	    try:
+		pnamesplit = str(row.find_all('td')[0].text).split(' ',3)
+                pname = pnamesplit[2]+pnamesplit[0]+pnamesplit[1]
+		hold.append([pname.replace(".",'').replace("-","").lower(),
                              str(row.find_all('td')[-1].text)])
                 
             except Exception, e:

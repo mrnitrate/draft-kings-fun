@@ -43,7 +43,7 @@ def run_solver(solver, all_players, max_flex):
     variables = []
 
     for player in all_players:
-        variables.append(solver.IntVar(0, 1, player.name))
+        variables.append(solver.IntVar(0, 1, player.code))
       
     objective = solver.Objective()
     objective.SetMaximization()
@@ -79,8 +79,9 @@ def run(max_flex, maxed_over, remove):
 
         for idx, row in enumerate(csvdata):
             if idx > 0:
-                all_players.append(Player(row[0], row[1], row[2]))
-
+		pname = row[5]+" "+row[1]
+                all_players.append(Player(row[0],row[1],pname.replace(".",'').replace("-",'').replace(" ","").lower(), row[2]))
+		#print(pname.replace(" ","").lower())
     # give each a ranking
     all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
     for idx, x in enumerate(all_players):
@@ -92,24 +93,25 @@ def run(max_flex, maxed_over, remove):
 
         for row in csvdata:
             holder = row
-            player = filter(lambda x: x.name in row['playername'], all_players)
+            player = filter(lambda x: x.code in row['playername'], all_players)
             try:
-                player[0].proj = int(int(row['points'].split('.')[0]))
-                player[0].marked = 'Y'
-                listify_holder = [
-                    row['playername'],
-                    row['points']
-                ]
-                if '0.0' not in row['points'] or player[0].cost != 0:
-                    ppd = float(row['points']) / float(player[0].cost)
-                else:
-                    ppd = 0
-                listify_holder.extend([player[0].cost, 
+            	player[0].proj = int(int(row['points'].split('.')[0]))
+            	player[0].marked = 'Y'
+            	listify_holder = [
+                	row['playername'],
+                	row['points']
+            	]
+            	if '0.0' not in row['points'] or player[0].cost != 0:
+                	ppd = float(row['points']) / float(player[0].cost)
+            	else:
+                	ppd = 0
+            	listify_holder.extend([player[0].cost, 
                                        ppd * 100000])
-                mass_hold.append(listify_holder)
-            except Exception, e:
-                print e
-
+            	mass_hold.append(listify_holder)
+            except Exception as e:
+	    	print(e)
+		print(row)
+			
     check = []
     with open('data/fan-pros.csv', 'rb') as csvdata:
         for row in csvdata:
@@ -127,7 +129,7 @@ def run(max_flex, maxed_over, remove):
 
 
     # remove previously optimize
-    all_players = filter(lambda x: x.name not in remove, all_players)
+    all_players = filter(lambda x: x.code not in remove, all_players)
 
     variables, solution = run_solver(solver, all_players, max_flex)
 
@@ -153,4 +155,4 @@ if __name__ == "__main__":
             rosters.append(run(ALL_LINEUPS[max_flex], max_flex, remove))
         for roster in rosters:
             for player in roster.players:
-                remove.append(player.name)
+                remove.append(player.code)

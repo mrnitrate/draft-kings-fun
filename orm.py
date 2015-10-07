@@ -35,10 +35,11 @@ class Roster:
         return s
 
 class Player:
-    def __init__(self, pos, name, cost, proj=0, marked=None):
+    def __init__(self, pos, name, code, cost, proj=0, marked=None):
         self.pos = pos
         self.name = name
-        self.cost = int(cost)
+        self.code = code
+	self.cost = int(cost)
         self.proj = proj
         self.marked = marked
         self.cost_ranking = 0
