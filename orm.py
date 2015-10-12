@@ -1,4 +1,5 @@
 
+
 from constants import ALL_POS_TEAM
 
 class Roster:
@@ -20,7 +21,7 @@ class Roster:
         return sum(map(lambda x: x.cost, self.players))
 
     def projected(self):
-        return sum(map(lambda x: x.proj, self.players))
+        return sum(map(lambda x: x.proj, self.players))/10
 
     def position_order(self, player):
         return self.POSITION_ORDER[player.pos]
@@ -30,29 +31,31 @@ class Roster:
 
     def __repr__(self):
         s = '\n'.join(str(x) for x in self.sorted_players())
-        s += "\n\nProjected Score: %s" % self.projected()
-        s += "\tCost: $%s" % self.spent()
+        s += "\nProjected Score: %s" % self.projected()
+        s += "\tCost: $%s\n" % self.spent()
         return s
 
 class Player:
-    def __init__(self, pos, name, code, cost, proj=0, marked=None):
+    def __init__(self, pos, name, team, cost, risk, proj=0, code='aa', marked=None):
         self.pos = pos
         self.name = name
         self.code = code
-	self.cost = int(cost)
+        self.team = team
+        self.cost = int(cost)
+        self.risk = risk
         self.proj = proj
         self.marked = marked
         self.cost_ranking = 0
 
     def player_report(self):
         print self.pos + ' '+ self.name + \
-        ' (' + str(self.cost) + ')' + ' (' + str(self.proj) + ')'
+        ' (' + str(self.cost) + ')' + ' (' + str(self.proj/10) + ')'
 
     def __repr__(self):
         return "[{0: <2}] {1: <20}(${2}, {3})".format(self.pos, \
                                     self.name, \
                                     self.cost, \
-                                    self.proj)
+                                    self.proj/10)
 
 class Team:
     def __init__(self, give):
@@ -73,7 +76,7 @@ class Team:
             name = getattr(self, pos).name
             players.append(name)
 
-        return len(players) != len(set(players))  
+        return len(players) != len(set(players))
 
     def _set_team_pos(self, give):
         for idx, val in enumerate(give):

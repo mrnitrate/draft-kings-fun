@@ -38,6 +38,7 @@ def cartesian(arrays, out=None):
     dtype = arrays[0].dtype
 
     n = np.prod([x.size for x in arrays])
+    print(n,len(arrays))
     if out is None:
         out = np.zeros([n, len(arrays)], dtype=dtype)
 

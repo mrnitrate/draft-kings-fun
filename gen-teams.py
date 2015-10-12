@@ -23,8 +23,8 @@ with open('data/dk-salaries-current-week.csv', 'rb') as dk:
     for idx, player in enumerate(rd):
         # skip header
         if idx > 0:
-            pts = int(player[4].split('.')[0])
-            all.append(Player(player[0], 
+        	pts = int(player[4].split('.')[0])
+        	all.append(Player(player[0], 
                               player[1], 
                               player[2],
                               pts))
@@ -54,7 +54,7 @@ def get_avail_pos(all_avail, pos, proj_filter=0):
         return [p for p in all if p.pos in ['QB', 'RB', 'WR'] and \
                                  int(p.cost) < cost_filter and \
                                  int(p.proj) > proj_filter]
-
+    
     return [p for p in all_avail if p.pos == pos and \
                                  int(p.cost) < cost_filter and \
                                  int(p.proj) > proj_filter]
@@ -64,7 +64,6 @@ def set_search_depth():
     '''sets positions to search on'''
     for pos in ALL_POS:
         filter_pos = get_avail_pos(all, pos)
-        
         setting = search_settings[pos]['d']
         if setting < 4:
             raise Exception('Must search beyond top 3 at each position')

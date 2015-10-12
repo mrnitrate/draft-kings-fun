@@ -8,7 +8,7 @@ from constants import FFPRO
 
 def build_fp_pages():
     fp_pages = []
-    for page in ['qb', 'rb', 'wr', 'te', 'k', 'dst']:
+    for page in ['qb', 'rb', 'wr', 'te', 'k']:
         fp_pages.append(
             FFPRO + '{0}.php?week={1}'.format(page, argv[1])
         )
