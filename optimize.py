@@ -124,13 +124,15 @@ Load Salary and Prediction data from csv's
 '''
 def load(all_players):
 
-	with open('data/DKSalaries.csv', 'rb') as csvfile:
+	with open('data/dk-salaries-current-week.csv', 'rb') as csvfile:
 		csvdata = csv.reader(csvfile, skipinitialspace=True)
 
 		for idx, row in enumerate(csvdata):
 			if idx > 0:
 				pname = row[5]+" "+row[1]
-				all_players.append(Player(row[0],row[1], row[5],row[2],0,0,pname.replace(".",'').replace("-",'').replace(" ","").lower()))
+				pname = pname.replace(".",'').replace("-",'').replace(" ","").lower()
+				all_players.append(Player(row[0],row[1],row[2],
+									row[3],row[5],0,0,pname))
 
 	# give each a ranking
 	all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
@@ -147,7 +149,6 @@ def load(all_players):
 			if row['points'] == 0 :
 				points = 0
 			else:
-				#points = row['points']
 				points = int(repr(float(row['points'])*10).split('.')[0])
 
 			if row['risk'] =='null' :
@@ -159,7 +160,7 @@ def load(all_players):
 
 			player = filter(lambda x: x.code in pname, all_players)
 			try:
-				player[0].proj =points
+				player[0].proj = points
 				player[0].risk = risk
 				player[0].marked = 'Y'
 				listify_holder = [

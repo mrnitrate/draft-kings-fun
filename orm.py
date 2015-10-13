@@ -36,24 +36,24 @@ class Roster:
         return s
 
 class Player:
-    def __init__(self, pos, name, team, cost, risk, proj=0, code='aa', marked=None):
+    def __init__(self, pos, name, cost,
+	    		matchup=None, team=None, risk=0, proj=0, code='aa', marked=None):
         self.pos = pos
         self.name = name
         self.code = code
         self.team = team
+        self.matchup = matchup
         self.cost = int(cost)
         self.risk = risk
         self.proj = proj
         self.marked = marked
         self.cost_ranking = 0
 
-    def player_report(self):
-        print self.pos + ' '+ self.name + \
-        ' (' + str(self.cost) + ')' + ' (' + str(self.proj/10) + ')'
-
     def __repr__(self):
-        return "[{0: <2}] {1: <20}(${2}, {3})".format(self.pos, \
+        return "[{0: <2}] {1: <20} {2} {3} (${4}, {5})".format(self.pos, \
                                     self.name, \
+									self.team, \
+                                    self.matchup, \
                                     self.cost, \
                                     self.proj/10)
 
