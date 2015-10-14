@@ -43,6 +43,7 @@ class Player:
         self.code = code
         self.team = team
         self.matchup = matchup
+        self.opps_team = matchup.split()[0].replace(team,'').replace('@','')
         self.cost = int(cost)
         self.risk = risk
         self.proj = proj
