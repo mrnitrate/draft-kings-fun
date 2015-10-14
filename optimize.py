@@ -38,8 +38,6 @@ def check_missing_players(all_players, min_cost, e_raise):
 		raise Exception('Total missing players at price point: ' + str(miss))
 
 
-
-
 def run_solver(solver, all_players, max_flex):
 	'''
 	handle or-tools logic
@@ -93,7 +91,7 @@ def run_solver(solver, all_players, max_flex):
 
 
 	'''
-	Add min number of differnet teams player must be drafted from constraint (draftkings == 2)
+	Add min number of different teams player must be drafted from constraint (draftkings == 2)
 	'''
 	team_names = set([o.team for o in all_players])
 	teams = []
@@ -105,9 +103,12 @@ def run_solver(solver, all_players, max_flex):
 		ids, players_by_team = zip(*filter(lambda (x,_): x.team in team, zip(all_players, variables)))
 		solver.Add(teams[idx]<=solver.Sum(players_by_team))
 
-
-
-
+	# o_players = filter(lambda x: x.pos in ['QB','WR','RB','TE'], all_players)
+	# opps_team_names= set([o.opps_team for o in o_players])
+	# opps_teams = []
+	# for idx,team in enumerate(opps_team_names):
+		# opps_teams.append(solver.IntVar(0,idx,'opps_'+team))
+	# print(opps_teams)
 
 #	  for position, limit in max_flex:
 #		  position_cap = solver.Constraint(limit, limit)
@@ -115,9 +116,7 @@ def run_solver(solver, all_players, max_flex):
 #			  if position == player.pos:
 #				  position_cap.SetCoefficient(variables[i], 1)
 
-
 	return variables, solver.Solve()
-
 
 '''
 Load Salary and Prediction data from csv's
@@ -184,12 +183,9 @@ def load(all_players):
 '''
 Removed previous optimal solution and run another iteration
 '''
-def run(all_players,max_flex, maxed_over, remove):
+def run(all_players,max_flex, maxed_over):
 	solver = pywraplp.Solver('FD',
 							 pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
-
-	# remove previously optimize
-	all_players = filter(lambda x: x.code not in remove, all_players)
 
 	variables, solution = run_solver(solver, all_players, max_flex)
 
@@ -207,15 +203,19 @@ def run(all_players,max_flex, maxed_over, remove):
 	  raise Exception('No solution error')
 
 
-
 '''
 Main Loop
 '''
 if __name__ == "__main__":
 	load(all_players)
-	rosters, remove = [], []
+	rosters = []
 	for x in xrange(0, int(args.i)):
-		rosters.append(run(all_players,POSITION_LIMITS_FLEX, 'flex', remove))
+		remove = []
+		rosters.append(run(all_players,POSITION_LIMITS_FLEX, 'flex'))
 		for roster in rosters:
 			for player in roster.players:
 				remove.append(player.code)
+			remove_players = filter(lambda x: x.code in remove, all_players)
+			sorted_remove = sorted(remove_players, key=lambda x: x.risk, reverse=True)
+			bad = [p.code for p in sorted_remove[:1]]
+			all_players = filter(lambda x: x.code not in bad, all_players)
