@@ -23,7 +23,7 @@ Load Salary and Prediction data from csv's
 '''
 def load_players():
 	all_players = []
-	with open('data/dk-salaries-current-week.csv', 'rb') as csvfile:
+	with open('data/dk-salaries.csv', 'rb') as csvfile:
 		csvdata = csv.reader(csvfile, skipinitialspace=True)
 
 		for idx, row in enumerate(csvdata):
@@ -224,7 +224,6 @@ def write_bulk_import_csv(rosters):
 Main Loop
 '''
 if __name__ == "__main__":
-	
 	all_players = load_players()
 	rosters = run_solver(all_players,int(args.i))
 	write_bulk_import_csv(rosters)
