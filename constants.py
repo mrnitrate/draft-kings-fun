@@ -1,10 +1,4 @@
-FFPRO = 'http://www.fantasypros.com/nfl/projections/'
-
 ALL_POS = ['QB', 'RB', 'WR', 'TE', 'DST']
-ALL_POS_TEAM = ['QB', 'RB1', 'RB2',
-                'WR1', 'WR2', 'WR3', 'FLEX',
-                'TE', 'DST']
-
 SALARY_CAP = 50000
 ROSTER_SIZE = 9
 
