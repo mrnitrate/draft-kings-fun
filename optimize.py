@@ -23,29 +23,27 @@ Load Salary and Prediction data from csv's
 '''
 def load_players():
 	all_players = []
-	with open('data/dk-salaries.csv', 'rb') as csvfile:
+	with open('data/DKSalaries.csv', 'rb') as csvfile:
 		csvdata = csv.reader(csvfile, skipinitialspace=True)
-
 		for idx, row in enumerate(csvdata):
 			if idx > 0:
 				pname = row[5]+" "+row[1]
 				pname = pname.replace(".",'').replace("-",'').replace(" ","").lower()
 				all_players.append(Player(row[0],row[1].strip(),row[2],row[3],row[5],0,0,pname))
 
-	# give each a ranking
-	all_players = sorted(all_players, key=lambda x: x.cost, reverse=True)
-	for idx, x in enumerate(all_players):
-		x.cost_ranking = idx + 1
-
+	indexs = [i for i in range(len(all_players))]
+	
 	with open('data/FFA-CustomRankings.csv', 'rb') as csvfile:
 		csvdata = csv.DictReader(csvfile)
-
 		for row in csvdata:
 			pname=row['team'].lower()+row['playername'].replace(".",'').replace("-",'').replace(" ","").lower()
 			player = filter(lambda x: x.code in pname, all_players)
 			try:
-				if row['upper'] == 0 :
-					points = 0
+				players,id = zip(*filter(lambda (x,_): x.code in pname, zip(all_players, indexs)))
+				if row['upper'] == '0' :
+					del all_players[id[0]]
+					indexs.pop()
+					continue
 				else:
 					points = int(repr(float(row['upper'])*100).split('.')[0])
 
@@ -74,7 +72,7 @@ def load_players():
 				#print(e,pname,player)
 
 	check_missing_players(all_players, args.sp, args.mp)
-	return all_players 
+	return all_players
 
 '''
 check for significant missing players
@@ -109,7 +107,6 @@ def run_solver(all_players,depth):
 	objective.SetMaximization()
 	for i, player in enumerate(all_players):
 		objective.SetCoefficient(variables[i], player.proj)
-
 	'''
 	Add Salary Cap Constraint
 	'''
@@ -154,22 +151,21 @@ def run_solver(all_players,depth):
 	Add Defence cant play against any offense's player team constraint
 	'''
 	o_players = filter(lambda x: x.pos in ['QB','WR','RB','TE'], all_players)
-	# opps_team_names= set([o.opps_team for o in o_players])
-	# teams_obj = filter(lambda x: x.pos == 'DST' , all_players)
-	# teams = set([o.team for o in teams_obj])
-
-	# for opps_team in team_names:
-		# if opps_team in teams :
-			# ids, players_by_opps_team = zip(*filter(lambda (x,_): x.pos in ['QB','WR','RB','TE'] and x.opps_team in opps_team, zip(all_players, variables)))
-			# idxs, defense = zip(*filter(lambda (x,_): x.pos == 'DST' and x.team in opps_team, zip(all_players, variables)))
-			# solver.Add(solver.Sum(1-x for x in players_by_opps_team)+solver.Sum(1-x for x in defense)>=1)
-
+	opps_team_names= set([o.opps_team for o in o_players])
+	teams_obj = filter(lambda x: x.pos == 'DST' , all_players)
+	teams = set([o.team for o in teams_obj])
+	for opps_team in team_names:
+		if opps_team in teams :
+			ids, players_by_opps_team = zip(*filter(lambda (x,_): x.pos in ['QB','WR','RB','TE'] and x.opps_team in opps_team, zip(all_players, variables)))
+			idxs, defense = zip(*filter(lambda (x,_): x.pos == 'DST' and x.team in opps_team, zip(all_players, variables)))
+ 			for player in players_by_opps_team:
+				solver.Add(player<=1-defense[0])
 	'''
-	Add QB stacking (at least 1 wr or te on same team as QB) constraint
+	Add QB stacking (at least 1 wr on same team as QB) constraint
 	'''
 	offense_team_names = set([o.team for o in o_players])
 	for o_team in offense_team_names:
-		ids, players_by_team = zip(*filter(lambda (x,_): x.pos in ['WR','TE'] and x.team == o_team, zip(all_players, variables)))
+		ids, players_by_team = zip(*filter(lambda (x,_): x.pos in ['WR'] and x.team == o_team, zip(all_players, variables)))
 		idxs, qb = zip(*filter(lambda (x,_): x.pos == 'QB' and x.team == o_team, zip(all_players, variables)))
 		solver.Add(solver.Sum(players_by_team)>=solver.Sum(qb))
 
@@ -181,12 +177,12 @@ def run_solver(all_players,depth):
 # 		solver.Add(solver.Sum(players_by_team)<=1)
 
 	'''
-	Add Max of 2 qb wr te or rb per game constraint
+	Add Max of 2 qb wr te or rb per game constraint, spread risk
 	'''
-	for team in list(team_names)[:len(team_names)/2]:
-		team_players = filter(lambda x: x.team in team, all_players)
-		ids, players_by_game = zip(*filter(lambda (x,_): x.team in team or x.team in team_players[0].opps_team and x.pos in ['WR','TE','RB','QB'], zip(all_players, variables)))
-		solver.Add(solver.Sum(players_by_game)<=2)
+	#for team in list(team_names):
+	#	team_players = filter(lambda x: x.team in team, all_players)
+	#	ids, players_by_game = zip(*filter(lambda (x,_): x.team in team or x.team in team_players[0].opps_team and x.pos in ['WR','TE','RB','QB'], zip(all_players, variables)))
+	#	solver.Add(solver.Sum(players_by_game)<=2)
 		
 	'''
 	Add remove previous solutions constraint and loop to generate X rosters
@@ -196,7 +192,7 @@ def run_solver(all_players,depth):
 		if rosters :
 			ids, players_from_roster = zip(*filter(lambda (x,_): x in rosters[-1].sorted_players()  , zip(all_players, variables)))
 			ids, players_not_from_roster = zip(*filter(lambda (x,_): x  not in rosters[-1].sorted_players()  , zip(all_players, variables)))
-			solver.Add(solver.Sum(players_not_from_roster)+solver.Sum(1-x for x in players_from_roster)>=1)
+			solver.Add(solver.Sum(players_not_from_roster)+solver.Sum(1-x for x in players_from_roster)>=9)
 		solution = solver.Solve()
 		if solution == solver.OPTIMAL:
 			roster = Roster()
@@ -204,22 +200,21 @@ def run_solver(all_players,depth):
 				if variables[i].solution_value() == 1:
 					roster.add_player(player)
 			rosters.append(roster)
-			print "Optimal roster iterations: %s" % x
+			print "Optimal roster: %s" % x
 			print roster
 		else:
 			raise Exception('No solution error')
-
 	return rosters
 
 '''
-Write rosters to csv for bulk import to draftkings 
+Write rosters to csv for bulk import to draftkings
 '''
 def write_bulk_import_csv(rosters):
 	with open('data/bulk-import.csv', 'wb') as csvfile:
 		writer = csv.writer(csvfile,delimiter=',',quotechar='"',quoting=csv.QUOTE_NONNUMERIC)
 		for roster in rosters:
 			writer.writerow([x.name for x in roster.sorted_players()])
-		
+
 '''
 Main Loop
 '''

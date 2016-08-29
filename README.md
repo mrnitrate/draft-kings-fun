@@ -19,10 +19,3 @@ To do:
 * Support Different Start Times from one salary csv
 * Different tuned solvers for specific DFS game types ie. GPP , H2H
 * Optimal Bankroll Management and game mix 
-* 
-
-
-
-
-	
-
